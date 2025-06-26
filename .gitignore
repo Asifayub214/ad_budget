@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg-info/
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+*.env
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
+
+# VSCode & PyCharm
+.vscode/
+.idea/
+
+# Migrations (optional to ignore, unless regenerating them)
+# */migrations/*.py
+# */migrations/__pycache__/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
