@@ -1,105 +1,149 @@
-# Ad Budget Management System
+# Django + Celery Budget Management System
 
-This project is a Django + Celery-based backend system that helps manage advertising budgets for brands. Each brand can have multiple campaigns with daily and monthly budgets. The system automatically tracks spending, enforces budget limits, and manages campaign status based on dayparting schedules.
+## Objective
+
+A backend system for an Ad Agency to manage advertising campaigns across brands, with automated budget tracking and enforcement using Django and Celery.
 
 ## Features
 
-- Track daily and monthly spend per campaign
-- Automatically pause campaigns that exceed their budget
-- Resume eligible campaigns at the start of a new day or month
-- Enforce campaign schedules using dayparting (allowed hours)
-- Reset daily and monthly budgets automatically
-- Fully statically typed with `mypy` and Django stubs
+- Track daily and monthly ad spend per brand
+- Automatically pause/resume campaigns based on budget limits
+- Reset spends daily/monthly
+- Respect dayparting (campaigns only run during allowed hours)
+- Background processing via Celery
+- Admin panel for managing brands and campaigns
 
-## Technology Stack
+## Tech Stack
 
-- Django (models, admin interface, business logic)
-- Celery (background tasks)
-- django-celery-beat (periodic task scheduling)
-- Redis (Celery broker)
-- PostgreSQL or SQLite (database)
-- Python type hints with `mypy` and `django-stubs`
-
-## Data Model Overview
-
-### Brand
-- `name`: string
-- `daily_budget`: float
-- `monthly_budget`: float
-
-### Campaign
-- `brand`: ForeignKey to Brand
-- `name`: string
-- `is_active`: boolean
-- `dayparting_start`: time
-- `dayparting_end`: time
-
-### Spend
-- `campaign`: ForeignKey to Campaign
-- `date`: date
-- `daily_spend`: float
-- `monthly_spend`: float
-
-## Workflow Description
-
-### Spend Tracking
-Spending is updated regularly for each campaign, tracked daily and monthly in the `Spend` model.
-
-### Budget Enforcement (Periodic Task)
-Every few minutes, a Celery task checks whether each campaign has exceeded its budget. If a campaign goes over its daily or monthly limit, it is paused.
-
-### Dayparting Enforcement (Periodic Task)
-Campaigns are only active during their allowed hours, specified by `dayparting_start` and `dayparting_end`. Outside this time range, campaigns are paused.
-
-### Daily and Monthly Resets
-- Daily spend is reset every night at midnight UTC.
-- Monthly spend is reset on the first day of each month.
-- Campaigns are reactivated automatically if they are within budget and within the current dayparting window.
+- Python 3.12
+- Django 5.x
+- Celery
+- Redis (via Docker)
+- SQLite (can be switched to PostgreSQL)
+- django-celery-beat
+- mypy (for static typing)
 
 ## Setup Instructions
 
-### Clone the Repository
+### 1. Clone the repository
 
+ 
+git clone https://github.com/Asifayub214/ad_budget.git
+cd ad_budget
+```
 
-git clone [url]
-cd ad-budget
+### 2. Create virtual environment and install requirements
 
-
-### Create a Virtual Environment
-
+ 
 python -m venv venv
-source venv/bin/activate   # On Windows: venv\Scripts\activate
-
-### Install Dependencies
+venv\Scripts\activate   # Windows
 pip install -r requirements.txt
+```
 
-### Apply Migrations
+### 3. Start Redis (via Docker)
+
+ 
+docker run --name redis-budget -p 6379:6379 -d redis
+```
+
+### 4. Run migrations
+
+ 
 python manage.py migrate
+```
 
-### Run the Development Server
+### 5. Create admin user (sample)
+
+ 
+python manage.py createsuperuser
+# Username: admin
+# Password: admin123 (you choose)
+```
+
+### 6. Start Django server
+
+ 
 python manage.py runserver
+```
 
-###  Start Redis (Locally)
-Ensure Redis is running on localhost:6379.
+### 7. Start Celery worker
 
-### Start Celery and Celery Beat
-In separate terminal windows:
+ 
 celery -A ad_budget worker --loglevel=info
+```
+
+### 8. Start Celery beat scheduler (for periodic tasks)
+
+ 
 celery -A ad_budget beat --loglevel=info
+```
 
+## Data Models
 
-Static Typing
-This project uses full static typing and has passed all mypy checks.
+- **Brand**
+  - name
+  - daily_budget
+  - monthly_budget
 
-### To run the type checker:
+- **Campaign**
+  - name
+  - linked to a Brand
+  - active (boolean)
+  - start_hour / end_hour (dayparting)
+  - daily_spend / monthly_spend
+
+## System Workflow
+
+1. **Spend Tracking**
+   - Spend is tracked per campaign and aggregated to brand level.
+
+2. **Budget Enforcement**
+   - Celery task checks if daily/monthly spend exceeds the brand’s budget.
+   - Pauses campaigns that exceed budget.
+
+3. **Dayparting**
+   - Campaigns are enabled/disabled based on current hour falling within their allowed time range.
+
+4. **Daily/Monthly Resets**
+   - Spends reset to 0 at midnight/day 1 of month.
+   - Inactive campaigns are reactivated if under budget and within dayparting window.
+
+## Static Typing (mypy)
+
+- Codebase uses full PEP 484-style type hints.
+- Run checks with:
+
+ 
 mypy .
+```
 
+- `mypy.ini` is configured to ignore third-party stubs.
+- No `Any` is used unless necessary.
 
-### GitHub Deployment
+## Tests
 
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin [url]
-git push -u origin main
+Run unit tests:
+
+ 
+python manage.py test
+```
+
+Includes:
+- Basic model tests
+- Dayparting logic checks
+
+## GitHub Actions (CI)
+
+`.github/workflows/mypy.yml` is included to run `mypy` checks automatically on each push to `main`.
+
+## Assumptions
+
+- Campaigns spend is simulated (not tracking real-time ad spend)
+- Dayparting uses local server time
+- All campaigns start with zero spend each day/month
+- Redis is assumed to be available via Docker locally
+
+## Repository
+
+GitHub Repository: https://github.com/Asifayub214/ad_budget
+
