@@ -132,16 +132,7 @@ Includes:
 - Basic model tests
 - Dayparting logic checks
 
-## GitHub Actions (CI)
 
-`.github/workflows/mypy.yml` is included to run `mypy` checks automatically on each push to `main`.
-
-## Assumptions
-
-- Campaigns spend is simulated (not tracking real-time ad spend)
-- Dayparting uses local server time
-- All campaigns start with zero spend each day/month
-- Redis is assumed to be available via Docker locally
 
 ## Repository
 
